@@ -1,14 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeviceIcon from '../../components/DeviceIcon';
+import HomeChat from '../../components/HomeChat';
 
-const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout, user, latestNotification }) => {
+const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout, user, latestNotification, socket }) => {
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentRoomId, setCurrentRoomId] = useState(null);
   const activeRoom = homeInfo?.rooms?.find(r => r._id === currentRoomId);
   const [showAccessCode, setShowAccessCode] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  // Keep pending requests synced dynamically or via reload
+  useEffect(() => {
+    setPendingRequestsCount(homeInfo?.members?.filter(m => m.status === 'pending').length || 0);
+  }, [homeInfo]);
+
+  // Real-time tracking and WebSockets
+  useEffect(() => {
+    if (!socket) return;
+    const handleChat = (msg) => {
+      if (activeTab !== 'chat') {
+        const myId = String(user.id || user._id);
+        if (String(msg.senderId) !== myId) {
+          setUnreadChatCount(prev => prev + 1);
+        }
+      }
+    };
+    
+    // Clear unread count automatically when the chat gets cleared by owner
+    const handleChatCleared = () => {
+      setUnreadChatCount(0);
+    };
+
+    // Handle incoming join requests dynamically
+    const handleNewRequest = () => {
+      // Push the count up instantly when anyone requests
+      setPendingRequestsCount(prev => prev + 1);
+    };
+
+    socket.on('receiveChatMessage', handleChat);
+    socket.on('chatCleared', handleChatCleared);
+    socket.on('newJoinRequest', handleNewRequest);
+
+    return () => {
+      socket.off('receiveChatMessage', handleChat);
+      socket.off('chatCleared', handleChatCleared);
+      socket.off('newJoinRequest', handleNewRequest);
+    };
+  }, [socket, activeTab, user]);
 
   // New Room Creation States
   const [newRoom, setNewRoom] = useState({ name: '', devices: [] });
@@ -53,7 +95,10 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newRoom)
       });
-      if(res.ok) window.location.reload();
+      if(res.ok) {
+        setNewRoom({ name: '', devices: [] });
+        setActiveTab('dashboard');
+      }
     } catch(err) {
       console.error(err);
       setIsSubmitting(false);
@@ -110,7 +155,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if(res.ok) window.location.reload(); // Refresh to pull updated homeInfo
+      // Backend will emit 'homeUpdated' socket event to refresh State
     } catch (err) {
       console.error(err);
     }
@@ -123,7 +168,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if(res.ok) window.location.reload();
+      // Backend will emit 'homeUpdated' socket event to refresh State
     } catch (err) {
       console.error(err);
     }
@@ -136,7 +181,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if(res.ok) window.location.reload();
+      // Backend will emit 'homeUpdated' socket event to refresh State
     } catch (err) {
       console.error(err);
     }
@@ -149,7 +194,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if(res.ok) window.location.reload();
+      // Backend will emit 'homeUpdated' socket event to refresh State
     } catch (err) {
       console.error(err);
     }
@@ -224,6 +269,9 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
             </svg>
             <span className="brand-text">Sapno Ka Ghar</span>
           </h2>
+          <button className="mobile-logout-btn" onClick={handleLogout} title="Log Out">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
         <div className="sidebar-menu">
           <p className="menu-label">Main Menu</p>
@@ -236,10 +284,27 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
           <div className={`menu-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
             <span style={{ marginLeft: '10px' }}>Activity Log</span>
           </div>
+          <div className={`menu-item ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setUnreadChatCount(0); }}>
+            <span style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Home Chat
+              {unreadChatCount > 0 && (
+                <span style={{ background: '#FF3333', color: '#FFF', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold', boxShadow: '0 0 10px rgba(255,50,50,0.5)' }}>
+                  {unreadChatCount}
+                </span>
+              )}
+            </span>
+          </div>
           {user.role === 'Owner' && (
             <>
               <div className={`menu-item ${activeTab === 'join_requests' ? 'active' : ''}`} onClick={() => setActiveTab('join_requests')}>
-                <span style={{ marginLeft: '10px' }}>Join Requests</span>
+                <span style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Join Requests
+                  {pendingRequestsCount > 0 && (
+                    <span style={{ background: '#44FF44', color: '#000', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold', boxShadow: '0 0 10px rgba(68,255,68,0.5)' }}>
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </span>
               </div>
               <div className={`menu-item ${activeTab === 'add_room' ? 'active' : ''}`} onClick={() => setActiveTab('add_room')}>
                 <span style={{ marginLeft: '10px' }}>Set Up New Room</span>
@@ -248,7 +313,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
           )}
           
           <p className="menu-label" style={{ marginTop: 'auto' }}>System</p>
-          <div className="menu-item" onClick={handleLogout}>
+          <div className="menu-item logout-menu-item" onClick={handleLogout}>
             <span style={{ marginLeft: '10px' }}>Log out</span>
           </div>
         </div>
@@ -689,6 +754,16 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
               </div>
 
             </div>
+          </div>
+        )}
+
+        {activeTab === 'chat' && (
+          <div className="fade-in" style={{ height: 'calc(100vh - 150px)', width: '100%', maxWidth: '900px', margin: '0 auto' }}>
+            <HomeChat 
+              socket={socket} 
+              homeInfo={homeInfo} 
+              user={user} 
+            />
           </div>
         )}
       </div>

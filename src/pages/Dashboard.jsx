@@ -35,7 +35,13 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('https://sapno-ka-ghar-backend.onrender.com/api/home', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store'
       });
       const data = await res.json();
       setLoading(false);
@@ -227,7 +233,7 @@ const Dashboard = () => {
 
   // Global Notification Render Block
   const NotificationsUI = () => (
-    <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ position: 'fixed', top: '20px', left: '0', right: '0', padding: '0 15px', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', gap: '10px' }}>
       {notifications.map(n => {
         let borderColor = '#3B82F6'; // Default Info -> Blue
         if (n.message.includes('turned ON')) borderColor = '#00FF9C'; // Success -> Green
@@ -250,9 +256,10 @@ const Dashboard = () => {
             padding: '1rem 1.2rem', 
             borderRadius: '12px', 
             color: '#FFFFFF', 
-            width: 'max-content',
-            maxWidth: '350px',
+            width: '100%',
+            maxWidth: '400px',
             boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 15px ${borderColor}22`,
+            pointerEvents: 'auto',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
@@ -281,6 +288,7 @@ const Dashboard = () => {
       handleLogout={handleLogout}
       user={user}
       latestNotification={latestNotification}
+      socket={socket}
     />
   );
 };

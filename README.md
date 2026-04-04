@@ -57,7 +57,7 @@ Sapno Ka Ghar is structured into three main synchronized components:
 ### 3. Frontend Setup
 1. Open a separate terminal and navigate to the `Frontend` directory: `cd Frontend`
 2. Install React dependencies: `npm install`
-3. Since this communicates with the backend, ensure your API Base URLs in the services point to `http://localhost:5000` (or your deployed URL).
+3. Since this communicates with the backend, ensure your API Base URLs in the services point to `https://sapno-ka-ghar-backend.onrender.com` (or your deployed URL).
 4. Run the frontend development server: `npm run dev`
 5. Visit `http://localhost:5173` in your browser.
 
