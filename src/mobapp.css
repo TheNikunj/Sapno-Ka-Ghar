@@ -1,0 +1,281 @@
+/* Mobile Optimization for Sapno Ka Ghar */
+.mobile-menu-btn {
+  display: none !important;
+}
+
+
+@media (max-width: 768px) {
+  /* 
+   * CORE LAYOUT
+   */
+  .dashboard-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: var(--bg-base) !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 4px 8px !important;
+    margin: 0 !important;
+    margin-left: auto !important; /* Force to the extreme right edge */
+  }
+
+  /* 
+   * TOP NAVIGATION TAB BAR (Replaces sidebar on mobile)
+   */
+  .sidebar-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex: 1 1 100% !important; /* Guarantee full width */
+    box-sizing: border-box !important;
+    padding: 0 1.25rem !important; /* Generous edge padding */
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 1rem 0 0.5rem 0 !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important; /* Force children (sidebar-header) to stretch full width */
+    background: rgba(17, 17, 17, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Properly align text and SVG in top bar */
+  .sidebar h2 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    font-size: 1.35rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+  }
+
+  .sidebar-menu {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    height: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.6rem !important;
+    padding: 0 1rem 0.5rem 1rem !important;
+  }
+
+  .menu-label {
+    display: none !important;
+  }
+
+  /* Style items cleanly into grid pills */
+  .menu-item {
+    flex: 1 1 calc(33% - 1rem) !important;
+    min-width: 110px !important;
+    max-width: 180px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    padding: 10px 12px !important;
+    font-size: 0.8rem !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-item span {
+    margin-left: 0 !important;
+  }
+  
+  .menu-item.active {
+    background: var(--accent-yellow) !important;
+    color: var(--text-dark) !important;
+    box-shadow: 0 0 15px var(--accent-yellow-glow) !important;
+    border: none !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* 
+   * MAIN CONTENT & SCROLL SPACING
+   */
+  .main-content {
+    padding: 1.5rem 1rem !important;
+    padding-bottom: 2rem !important; 
+    padding-top: 190px !important; /* Offset taller fixed header */
+  }
+
+  /* 
+   * TOP HEADER / OWNER DASHBOARD CARDS
+   * Force horizontal items into vertical stack cards
+   */
+  .top-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1.2rem !important;
+    margin-bottom: 2rem !important;
+    padding-top: 0.5rem !important;
+  }
+
+  /* Card 1: User Info & Access Code */
+  .top-header .user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    padding: 1.25rem !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Make sure Welcome text wraps beautifully */
+  .top-header .user-info > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .user-info h1 {
+    font-size: 1.35rem !important;
+  }
+
+  /* The Access Code box to span full width of the card */
+  .top-header .user-info > div[title="Click to Reveal Code"] {
+    width: 100% !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    margin-top: 0 !important;
+    padding: 12px 16px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Card 2: Live Power Draw & System Off */
+  .top-header > div:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    background: linear-gradient(135deg, rgba(234, 235, 114, 0.05) 0%, rgba(0, 0, 0, 0.3) 100%) !important;
+    padding: 1.25rem !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(234, 235, 114, 0.1) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Power draw text align fixes inside the Card 2 */
+  .top-header > div:last-child > div {
+    align-items: flex-start !important;
+  }
+  
+  .top-header > div:last-child > div > span {
+    font-size: 0.70rem !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .top-header > div:last-child > div > div h2 {
+    font-size: 2.2rem !important;
+  }
+
+  /* System Off Button scaling */
+  .top-header > div:last-child > button {
+    padding: 0.8rem 1.2rem !important;
+    font-size: 0.85rem !important;
+    flex: 1 !important;
+    max-width: 50% !important;
+    justify-content: center !important;
+  }
+
+  /* 
+   * MEMBER DASHBOARD NAVBAR fallback
+   */
+  .navbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+  .navbar .nav-links {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  /* 
+   * GRIDS & CARDS
+   */
+  .rooms-grid {
+    gap: 1.5rem !important;
+  }
+
+  .devices-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Force a strict 2-column mobile grid */
+    gap: 1rem !important;
+  }
+
+  .glass-card {
+    padding: 1.25rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* 
+   * APP CONTAINERS / INPUTS
+   */
+  .app-container {
+    padding: 1rem !important;
+    justify-content: center !important;
+  }
+
+  input, select, button {
+    font-size: 16px !important; /* Force > 16px to prevent iOS zoom */
+    padding: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra Small Mobile Edge-case Adjustments */
+  .devices-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Keep 2 column to feel like an app */
+  }
+
+  .top-header > div:last-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1.5rem !important;
+  }
+  
+  .top-header > div:last-child > div {
+    align-items: center !important; /* Center the power draw when stacked */
+  }
+  
+  .top-header > div:last-child > button {
+    max-width: 100% !important; /* Make system off button take full width */
+    width: 100% !important;
+  }
+}

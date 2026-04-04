@@ -88,6 +88,10 @@ const Dashboard = () => {
         });
       });
 
+      newSocket.on('homeUpdated', () => {
+        fetchHome(); // Automatically refetch state
+      });
+
       newSocket.on('notification', (notif) => {
         setNotifications(prev => [notif, ...prev].slice(0, 3)); // Keep strictly max 3
         setLatestNotification(notif);

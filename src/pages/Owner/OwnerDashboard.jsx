@@ -13,6 +13,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
   // New Room Creation States
   const [newRoom, setNewRoom] = useState({ name: '', devices: [] });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const addDeviceToNewRoom = (type) => {
     let devName = 'Device';
@@ -209,7 +210,21 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
       
       {/* Sidebar Navigation */}
       <div className="sidebar">
-        <h2>Sapno Ka Ghar</h2>
+        <div className="sidebar-header">
+          <h2 className="sidebar-brand">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#yellowGradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 12px rgba(234, 235, 114, 0.6))', marginTop: '-4px' }}>
+              <defs>
+                <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="100%" stopColor="#EAEB72" />
+                </linearGradient>
+              </defs>
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span className="brand-text">Sapno Ka Ghar</span>
+          </h2>
+        </div>
         <div className="sidebar-menu">
           <p className="menu-label">Main Menu</p>
           <div className={`menu-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>

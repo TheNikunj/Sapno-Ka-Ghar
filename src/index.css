@@ -54,10 +54,24 @@ body {
   gap: 2rem;
 }
 
-.sidebar h2 {
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
+.sidebar h2.sidebar-brand {
+  margin: 0 0 1rem 0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+}
+
+.brand-text {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-yellow) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 15px rgba(234, 235, 114, 0.4));
 }
 
 .sidebar-menu {

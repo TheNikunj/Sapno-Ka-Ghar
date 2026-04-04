@@ -6,6 +6,7 @@ const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'owners'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -73,7 +74,21 @@ const AdminDashboard = () => {
     <div className="dashboard-layout fade-in">
       {/* Sidebar matching the theme! */}
       <div className="sidebar">
-        <h2>Sapno Ka Ghar</h2>
+        <div className="sidebar-header">
+          <h2 className="sidebar-brand">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#yellowGradientAdmin)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 12px rgba(234, 235, 114, 0.6))', marginTop: '-4px' }}>
+              <defs>
+                <linearGradient id="yellowGradientAdmin" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="100%" stopColor="#EAEB72" />
+                </linearGradient>
+              </defs>
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span className="brand-text">Sapno Ka Ghar</span>
+          </h2>
+        </div>
         <div className="sidebar-menu">
           <p className="menu-label">System Control</p>
           <div className={`menu-item ${activeTab === 'pending' ? 'active' : ''}`} onClick={() => setActiveTab('pending')}>
