@@ -3,6 +3,13 @@
   display: none;
 }
 
+/* Base Desktop Notification Layout */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  align-items: flex-end;
+}
 
 @media (max-width: 768px) {
   /* 
@@ -34,6 +41,14 @@
   .mobile-logout-btn:active {
     background: #FF5555 !important;
     color: #FFF !important;
+  }
+
+  /* Centered, elevated mobile notifications avoiding cutoffs */
+  .notifications-container {
+    top: 15px !important;
+    left: 10px !important;
+    right: 10px !important;
+    align-items: center !important;
   }
 
   /* 

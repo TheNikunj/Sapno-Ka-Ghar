@@ -102,10 +102,10 @@ const Dashboard = () => {
         setNotifications(prev => [notif, ...prev].slice(0, 3)); // Keep strictly max 3
         setLatestNotification(notif);
 
-        // Auto-dismiss exact notification after 15 seconds
+        // Auto-dismiss exact notification after 3 seconds for optimal UX
         setTimeout(() => {
           setNotifications(current => current.filter(n => n.id !== notif.id));
-        }, 15000);
+        }, 3000);
       });
 
       return () => newSocket.close();
@@ -233,7 +233,7 @@ const Dashboard = () => {
 
   // Global Notification Render Block
   const NotificationsUI = () => (
-    <div style={{ position: 'fixed', top: '20px', left: '0', right: '0', padding: '0 15px', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', gap: '10px' }}>
+    <div className="notifications-container" style={{ zIndex: 99999, display: 'flex', flexDirection: 'column', pointerEvents: 'none', gap: '10px' }}>
       {notifications.map(n => {
         let borderColor = '#3B82F6'; // Default Info -> Blue
         if (n.message.includes('turned ON')) borderColor = '#00FF9C'; // Success -> Green
