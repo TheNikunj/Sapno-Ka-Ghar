@@ -609,52 +609,105 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
         )}
 
         {activeTab === 'notifications' && (
-          <div className="fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ color: 'var(--text-primary)', fontSize: '1.3rem', fontWeight: 600, letterSpacing: '0.3px', margin: 0 }}>
-                24-Hour Activity Log
-              </h3>
+          <div className="fade-in" style={{ paddingBottom: '2rem' }}>
+            <div style={{ 
+              display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', 
+              marginBottom: '2rem', gap: '1rem', background: 'var(--bg-panel)', padding: '1.5rem', 
+              borderRadius: '16px', border: '1px solid var(--border-subtle)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(234, 235, 114, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(234, 235, 114, 0.2)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                </div>
+                <h3 style={{ color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 700, letterSpacing: '0.5px', margin: 0 }}>
+                  24-Hour Activity Log
+                </h3>
+              </div>
               
               {user.role === 'Owner' && history.length > 0 && (
                 <button 
                   onClick={handleClearNotifications}
-                  title="Wipe Logs"
+                  title="Wipe all history logs"
                   style={{ 
-                    background: 'rgba(255,50,50,0.1)', color: '#FF5555', border: '1px solid rgba(255,50,50,0.3)', 
-                    padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', transition: 'all 0.2s' 
+                    background: 'linear-gradient(135deg, rgba(200,30,30,0.15) 0%, rgba(150,0,0,0.2) 100%)',
+                    color: '#FF5555',
+                    border: '1px solid rgba(255,68,68,0.3)',
+                    boxShadow: '0 8px 25px rgba(255,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+                    padding: '0.8rem 1.4rem', 
+                    borderRadius: '12px', 
+                    cursor: 'pointer', 
+                    fontWeight: '600', 
+                    fontSize: '0.9rem', 
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: 'fit-content',
+                    marginLeft: 'auto'
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#FF4444'; e.currentTarget.style.color = '#FFF'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,50,50,0.1)'; e.currentTarget.style.color = '#FF5555'; }}
+                  onMouseEnter={(e) => { 
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,50,50,0.25) 0%, rgba(200,0,0,0.4) 100%)'; 
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(255,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)';
+                    e.currentTarget.style.color = '#FFF';
+                  }}
+                  onMouseLeave={(e) => { 
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(200,30,30,0.15) 0%, rgba(150,0,0,0.2) 100%)'; 
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(255,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05)';
+                    e.currentTarget.style.color = '#FF5555';
+                  }}
                 >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
                   Delete All Logs
                 </button>
               )}
             </div>
 
-            <div className="glass-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', background: 'var(--bg-panel)', maxHeight: '600px', overflowY: 'auto', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-              {history.length === 0 ? <p style={{color: 'var(--text-secondary)', padding: '2rem', textAlign: 'center'}}>No recent activity within 24 hours.</p> : null}
+            <div className="glass-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', background: 'var(--bg-panel)', maxHeight: '650px', overflowY: 'auto', borderRadius: '16px', border: '1px solid var(--border-subtle)', boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.2)' }}>
+              {history.length === 0 ? (
+                <div style={{ padding: '4rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '3rem', opacity: 0.5 }}>📭</span>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 500, margin: 0 }}>No recent activity within 24 hours.</p>
+                </div>
+              ) : null}
               {history.map((log, idx) => {
-                let finalMessage = log.message;
+                // Remove the hardcoded bell emoji from the backend
+                let finalMessage = log.message.replace('🔔 ', '');
+                
                 if(log.actorName === user.name) {
                   finalMessage = finalMessage.replace(log.actorName, 'You');
                 }
                 const isOff = finalMessage.includes('OFF');
                 return (
                   <div key={log._id} style={{ 
-                    padding: '1.2rem 1.5rem', borderBottom: idx === history.length - 1 ? 'none' : '1px solid var(--border-subtle)', 
-                    display: 'flex', alignItems: 'center', gap: '15px', transition: 'background 0.2s', cursor: 'default'
+                    padding: '1.25rem 1.5rem', borderBottom: idx === history.length - 1 ? 'none' : '1px solid var(--border-subtle)', 
+                    display: 'flex', alignItems: 'center', gap: '18px', transition: 'background 0.2s', cursor: 'default'
                   }} 
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} 
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'} 
                   onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <div style={{ 
-                      width: '40px', height: '40px', borderRadius: '50%', background: isOff ? 'rgba(255,50,50,0.1)' : 'rgba(68,255,68,0.1)', 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${isOff ? 'rgba(255,50,50,0.3)' : 'rgba(68,255,68,0.3)'}` 
+                      flexShrink: 0, width: '46px', height: '46px', borderRadius: '50%', 
+                      background: isOff ? 'rgba(255,50,50,0.15)' : 'rgba(68,255,68,0.15)', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                      border: `1px solid ${isOff ? 'rgba(255,50,50,0.3)' : 'rgba(68,255,68,0.3)'}`,
+                      boxShadow: `0 0 15px ${isOff ? 'rgba(255,50,50,0.1)' : 'rgba(68,255,68,0.1)'}`
                     }}>
                       <span style={{ fontSize: '1.2rem' }}>{isOff ? '🔌' : '⚡'}</span>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 500, margin: '0 0 6px 0' }}>{finalMessage}</p>
-                      <small style={{ color: 'var(--text-secondary)' }}>
+                      <p style={{ color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 600, margin: '0 0 6px 0', letterSpacing: '0.2px' }}>{finalMessage}</p>
+                      <small style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
                         {new Date(log.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
                       </small>
                     </div>

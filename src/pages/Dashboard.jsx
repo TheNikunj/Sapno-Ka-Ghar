@@ -248,17 +248,17 @@ const Dashboard = () => {
         return (
           <div key={n.id} className="fade-in" style={{ 
             position: 'relative',
-            background: 'rgba(20, 20, 20, 0.85)', 
+            background: 'rgba(255, 255, 255, 0.95)', 
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid rgba(0,0,0,0.08)',
             borderLeft: `4px solid ${borderColor}`, 
             padding: '1rem 1.2rem', 
             borderRadius: '12px', 
-            color: '#FFFFFF', 
+            color: '#1A1A1A', 
             width: '100%',
             maxWidth: '400px',
-            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 15px ${borderColor}22`,
+            boxShadow: `0 8px 32px rgba(0,0,0,0.15), 0 0 15px ${borderColor}44`,
             pointerEvents: 'auto',
             display: 'flex',
             alignItems: 'center',
@@ -271,7 +271,7 @@ const Dashboard = () => {
               background: borderColor,
               boxShadow: `0 0 8px ${borderColor}`
             }} />
-            <span style={{ fontSize: '0.90rem', letterSpacing: '0.3px', lineHeight: '1.4', fontWeight: '500' }}>{finalMessage}</span>
+            <span style={{ fontSize: '0.90rem', letterSpacing: '0.3px', lineHeight: '1.4', fontWeight: '600' }}>{finalMessage}</span>
           </div>
         );
       })}
