@@ -136,7 +136,7 @@ const Auth = () => {
               <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.12)', padding: '14px 16px', borderRadius: '12px', fontSize: '1rem', color: '#FFF', transition: '0.3s', cursor: 'pointer', outline: 'none', appearance: 'none' }} onFocus={e => e.target.style.borderColor = 'var(--accent-yellow)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}>
                 <option value="Owner" style={{color: '#000'}}>Owner (Full Access)</option>
                 <option value="Member" style={{color: '#000'}}>Member (Limited Access)</option>
-                <option value="Admin" style={{color: '#000'}}>System Admin</option>
+                <option value="Admin" style={{color: '#000'}}> Admin</option>
               </select>
             </div>
           )}
