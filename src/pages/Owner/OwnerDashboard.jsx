@@ -12,6 +12,29 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [expandedMemberDetails, setExpandedMemberDetails] = useState(null);
+  const [tempAccessibleRooms, setTempAccessibleRooms] = useState([]);
+
+  const handleSaveMemberRooms = async (memberId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`https://sapno-ka-ghar-backend.onrender.com/api/home/member/${memberId}/rooms`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ roomIds: tempAccessibleRooms })
+      });
+      if (res.ok) {
+        setExpandedMemberDetails(null);
+      } else {
+        let errData;
+        try { errData = await res.json(); } catch(e){}
+        alert(`Failed to save access: ${errData ? errData.error : res.statusText}`);
+      }
+    } catch(err) {
+      console.error(err);
+      alert(`Network error: ${err.message}`);
+    }
+  };
 
   // Keep pending requests synced dynamically or via reload
   useEffect(() => {
@@ -431,12 +454,13 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
               <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)', fontSize: '1.3rem', fontWeight: 600, letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 Rooms <span style={{ background: 'var(--bg-panel)', padding: '2px 10px', borderRadius: '12px', fontSize: '0.9rem', color: 'var(--accent-yellow)', border: '1px solid var(--border-subtle)' }}>{homeInfo?.rooms?.length || 0}</span>
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+              <div className="rooms-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
                 {homeInfo?.rooms.map(room => {
                   const activeCount = room.devices.filter(d => d.isOn).length;
                   return (
                     <div 
                       key={room._id} 
+                      className="room-card"
                       onClick={() => { setCurrentRoomId(room._id); setActiveTab('room_view'); }}
                       style={{ 
                         borderRadius: '20px', overflow: 'hidden', cursor: 'pointer', position: 'relative', height: '220px',
@@ -528,82 +552,125 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
                 </div>
               </div>
 
-              {activeMembers.filter(m => m.user).map(m => (
-                <div key={m.user._id} style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                  background: 'var(--bg-panel)', padding: '1.5rem', borderRadius: '16px', 
-                  border: m.role === 'admin' ? '1px solid rgba(234, 235, 114, 0.3)' : '1px solid var(--border-subtle)', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', transition: 'transform 0.3s' 
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0px)'}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    
-                    {/* Premium Avatar Profile Icon */}
-                    <div style={{ 
-                      width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(234, 235, 114, 0.1)', 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(234, 235, 114, 0.3)' 
-                    }}>
-                      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-yellow)' }}>
-                        {m.user?.name ? m.user.name.charAt(0).toUpperCase() : '?'}
-                      </span>
-                    </div>
+              {activeMembers.filter(m => m.user).map(m => {
+                const isExpanded = expandedMemberDetails?.user?._id === m.user._id;
 
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.15rem' }}>{m.user?.name || 'Unknown User'}</span>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{m.user?.email}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                        <span style={{ color: '#44FF44', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#44FF44' }} /> Active 
-                        </span>
-                        <span style={{ color: m.role === 'admin' ? 'var(--accent-yellow)' : 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          • {m.role === 'admin' ? 'Admin' : 'Member'}
-                        </span>
+                return (
+                  <div key={m.user._id} 
+                    onClick={() => {
+                      if (!isExpanded) {
+                        setExpandedMemberDetails(m);
+                        setTempAccessibleRooms(m.roomAccessConfigured ? (m.accessibleRooms || []) : (homeInfo?.rooms || []).map(r => r._id));
+                      }
+                    }}
+                    style={{ 
+                      display: 'flex', flexDirection: 'column', gap: '15px',
+                      background: 'var(--bg-panel)', padding: isExpanded ? '1.5rem' : '1.2rem', 
+                      borderRadius: '16px', 
+                      border: isExpanded ? '1px solid var(--accent-yellow)' : '1px solid var(--border-subtle)', 
+                      boxShadow: isExpanded ? '0 10px 30px rgba(0,0,0,0.4)' : '0 4px 15px rgba(0,0,0,0.2)', 
+                      cursor: isExpanded ? 'default' : 'pointer', transition: 'all 0.3s',
+                      gridColumn: isExpanded ? '1 / -1' : 'auto'
+                    }}
+                    onMouseEnter={(e) => { if(!isExpanded) { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; } }}
+                    onMouseLeave={(e) => { if(!isExpanded) { e.currentTarget.style.transform = 'translateY(0px)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; } }}
+                  >
+                    {!isExpanded ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'rgba(234, 235, 114, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(234, 235, 114, 0.3)' }}>
+                            <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--accent-yellow)' }}>
+                              {m.user?.name ? m.user.name.charAt(0).toUpperCase() : '?'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>{m.user?.name || 'Unknown User'}</span>
+                            <span style={{ color: m.role === 'admin' ? 'var(--accent-yellow)' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>
+                              {m.role === 'admin' ? 'Admin' : 'Member'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', transition: 'all 0.2s', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>↓</span>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="fade-in" style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(234, 235, 114, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(234, 235, 114, 0.3)' }}>
+                              <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--accent-yellow)' }}>
+                                {m.user?.name ? m.user.name.charAt(0).toUpperCase() : '?'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <h2 style={{ color: '#FFF', margin: '0 0 4px 0', fontSize: '1.4rem' }}>{m.user?.name || 'Unknown User'}</h2>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{m.user?.email}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                <span style={{ color: '#44FF44', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(68,255,68,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+                                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#44FF44', boxShadow: '0 0 5px #44FF44' }} /> Active 
+                                </span>
+                                <span style={{ color: m.role === 'admin' ? '#000' : 'var(--text-secondary)', background: m.role === 'admin' ? 'var(--accent-yellow)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  {m.role === 'admin' ? 'House Admin' : 'Standard Member'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); setExpandedMemberDetails(null); }} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '1.2rem', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFF'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#888'; }} title="Close Details">✕</button>
+                        </div>
 
+                        {user.role === 'Owner' && (
+                          <div style={{ display: 'flex', gap: '15px', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {m.role === 'admin' ? (
+                              <button onClick={(e) => { e.stopPropagation(); handleDemote(m.user._id); setExpandedMemberDetails(null); }} style={{ width: 'max-content', padding: '0.6rem 1.4rem', background: 'rgba(255,150,50,0.1)', color: '#FFAA33', border: '1px solid rgba(255,150,50,0.3)', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }} onMouseEnter={e => { e.currentTarget.style.background = '#FFAA33'; e.currentTarget.style.color = '#000'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,150,50,0.1)'; e.currentTarget.style.color = '#FFAA33'; }}>
+                                <span style={{ fontSize: '1.1rem', margin: '-2px 0 0 0' }}>↓</span> Demote
+                              </button>
+                            ) : (
+                              <button onClick={(e) => { e.stopPropagation(); handlePromote(m.user._id); setExpandedMemberDetails(null); }} style={{ width: 'max-content', padding: '0.6rem 1.4rem', background: 'rgba(234, 235, 114, 0.1)', color: 'var(--accent-yellow)', border: '1px solid rgba(234, 235, 114, 0.3)', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-yellow)'; e.currentTarget.style.color = '#000'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(234, 235, 114, 0.1)'; e.currentTarget.style.color = 'var(--accent-yellow)'; }}>
+                                <span style={{ fontSize: '1.1rem', margin: '-2px 0 0 0' }}>↑</span> Promote to Admin
+                              </button>
+                            )}
+                            <button onClick={(e) => { e.stopPropagation(); handleReject(m.user._id); setExpandedMemberDetails(null); }} style={{ width: 'max-content', padding: '0.6rem 1.4rem', background: 'rgba(255,50,50,0.1)', color: '#FF5555', border: '1px solid rgba(255,50,50,0.3)', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#FF4444'; e.currentTarget.style.color = '#FFF'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,50,50,0.1)'; e.currentTarget.style.color = '#FF5555'; }}>
+                              <span style={{ fontSize: '1rem', margin: '-2px 0 0 0' }}>⊘</span> Suspend Area
+                            </button>
+                          </div>
+                        )}
+
+                        {user.role === 'Owner' && m.role !== 'admin' && (
+                          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <h4 style={{ color: '#FFF', fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              Physical Room Limitations
+                              <span style={{ fontSize: '0.8rem', color: 'var(--accent-yellow)', background: 'rgba(234, 235, 114, 0.15)', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(234, 235, 114, 0.3)' }}>{tempAccessibleRooms.length} Enforced</span>
+                            </h4>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.2rem', lineHeight: '1.4' }}>Select which physical rooms this member is allowed to explicitly interact with and view.</p>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '1.5rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' }}>
+                              {homeInfo?.rooms?.map(room => (
+                                <label key={room._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={tempAccessibleRooms.includes(room._id)}
+                                    onChange={(e) => {
+                                      if(e.target.checked) setTempAccessibleRooms(prev => [...prev, room._id]);
+                                      else setTempAccessibleRooms(prev => prev.filter(id => id !== room._id));
+                                    }}
+                                    style={{ width: '18px', height: '18px', accentColor: 'var(--accent-yellow)', cursor: 'pointer' }}
+                                  />
+                                  <span style={{ color: '#FFF', fontSize: '0.95rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                            
+                            <button onClick={(e) => { e.stopPropagation(); handleSaveMemberRooms(m.user._id); }} style={{ width: '100%', background: 'linear-gradient(135deg, var(--accent-yellow) 0%, #D4D540 100%)', color: '#000', border: 'none', padding: '0.8rem', borderRadius: '8px', fontWeight: '800', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(234, 235, 114, 0.2)', transition: 'transform 0.2s', letterSpacing: '0.5px', textTransform: 'uppercase' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                              Commit Changes
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-
-                  {user.role === 'Owner' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {m.role === 'admin' ? (
-                        <button 
-                          onClick={() => handleDemote(m.user._id)}
-                          title="Demote to standard Member"
-                          style={{ background: 'rgba(255,150,50,0.1)', color: '#FFAA33', border: '1px solid rgba(255,150,50,0.3)', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.7rem', transition: 'all 0.2s', textTransform: 'uppercase' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#FFAA33'; e.currentTarget.style.color = '#000'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,150,50,0.1)'; e.currentTarget.style.color = '#FFAA33'; }}
-                        >
-                          Demote
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => handlePromote(m.user._id)}
-                          title="Promote to House Admin"
-                          style={{ background: 'rgba(234, 235, 114, 0.1)', color: 'var(--accent-yellow)', border: '1px solid rgba(234, 235, 114, 0.3)', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.7rem', transition: 'all 0.2s', textTransform: 'uppercase' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-yellow)'; e.currentTarget.style.color = '#000'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(234, 235, 114, 0.1)'; e.currentTarget.style.color = 'var(--accent-yellow)'; }}
-                        >
-                          Promote
-                        </button>
-                      )}
-                      
-                      <button 
-                        onClick={() => handleReject(m.user._id) }
-                        title="Revoke access & block member"
-                        style={{ 
-                          background: 'rgba(255,50,50,0.1)', color: '#FF5555', border: '1px solid rgba(255,50,50,0.3)', 
-                          padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.7rem', transition: 'all 0.2s', textTransform: 'uppercase'
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#FF4444'; e.currentTarget.style.color = '#FFF'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,50,50,0.1)'; e.currentTarget.style.color = '#FF5555'; }}
-                      >
-                        Block
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

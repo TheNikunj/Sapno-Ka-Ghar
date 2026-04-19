@@ -6,6 +6,7 @@ import OwnerDashboard from './Owner/OwnerDashboard';
 import DeviceIcon from '../components/DeviceIcon';
 import JoinHome from './Member/JoinHome';
 import MemberDashboard from './Member/MemberDashboard';
+import VoiceAssistant from './Voice/VoiceAssistant';
 
 const Dashboard = () => {
   const [homeInfo, setHomeInfo] = useState(null);
@@ -281,15 +282,18 @@ const Dashboard = () => {
   // We now seamlessly unify the Glassmorphism Interface! 
   // OwnerDashboard contains internal dynamic protection flags so Members safely experience the premium UI without backend overlap.
   return (
-    <OwnerDashboard
-      homeInfo={homeInfo}
-      NotificationsUI={NotificationsUI}
-      toggleDevice={toggleDevice}
-      handleLogout={handleLogout}
-      user={user}
-      latestNotification={latestNotification}
-      socket={socket}
-    />
+    <>
+      <OwnerDashboard
+        homeInfo={homeInfo}
+        NotificationsUI={NotificationsUI}
+        toggleDevice={toggleDevice}
+        handleLogout={handleLogout}
+        user={user}
+        latestNotification={latestNotification}
+        socket={socket}
+      />
+      <VoiceAssistant homeInfo={homeInfo} toggleDevice={toggleDevice} />
+    </>
   );
 };
 
