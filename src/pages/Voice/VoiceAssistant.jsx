@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import nlp from 'compromise';
+import stringSimilarity from 'string-similarity';
+
 
 const VoiceAssistant = ({ homeInfo, toggleDevice }) => {
   const [isActive, setIsActive] = useState(false);
@@ -21,49 +24,143 @@ const VoiceAssistant = ({ homeInfo, toggleDevice }) => {
     };
   }, []);
 
-  const processCommand = (text, hi, td) => {
-     if(!hi || !hi.rooms) {
-       setTimeout(() => setFeedbackText(''), 3000);
-       return;
+  const normalize = (text) => {
+     let cleanText = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
+     
+     // Homophone replacements for numbers and common misrecognitions
+     const homophones = {
+       "for": "4", "four": "4",
+       "to": "2", "too": "2", "two": "2",
+       "won": "1", "one": "1",
+       "free": "3", "tree": "3", "three": "3",
+       "ate": "8", "eight": "8",
+       "five": "5", "six": "6", "seven": "7", "nine": "9", "ten": "10"
+     };
+     
+     let words = cleanText.split(' ');
+     words = words.map(w => homophones[w] || w);
+     cleanText = words.join(' ');
+
+     try {
+       const doc = nlp(cleanText);
+       doc.contractions().expand();
+       doc.numbers().toNumber();
+       return doc.text();
+     } catch (e) {
+       return cleanText;
+     }
+  };
+
+  const getIntent = (text) => {
+     if (text.includes('turn on') || text.includes('switch on') || text.includes('start')) return true;
+     if (text.includes('turn off') || text.includes('switch off') || text.includes('stop')) return false;
+
+     const onKeywords = ['on', 'start', 'activate', 'run', 'enable', 'open'];
+     const offKeywords = ['off', 'stop', 'deactivate', 'close', 'disable', 'shut'];
+     
+     const words = text.split(' ');
+     for (const word of words) {
+        if (onKeywords.includes(word)) return true;
+        if (offKeywords.includes(word)) return false;
      }
 
-     let action = null;
-     if (text.includes('turn on') || text.includes('switch on') || text.includes('start')) action = true;
-     else if (text.includes('turn off') || text.includes('switch off') || text.includes('stop')) action = false;
-     else if (/\bon\b/.test(text)) action = true;
-     else if (/\boff\b/.test(text)) action = false;
+     let highestOn = 0;
+     let highestOff = 0;
 
-     if (action === null) {
-       setFeedbackText('Action not recognized. Try "Turn on" or "Living Room Light ON".');
-       setTimeout(() => setFeedbackText(''), 3000);
-       return;
+     for (const word of words) {
+        const onMatch = stringSimilarity.findBestMatch(word, onKeywords);
+        const offMatch = stringSimilarity.findBestMatch(word, offKeywords);
+        if (onMatch.bestMatch.rating > highestOn) highestOn = onMatch.bestMatch.rating;
+        if (offMatch.bestMatch.rating > highestOff) highestOff = offMatch.bestMatch.rating;
      }
 
-     let matchedRoom = null;
-     for (const room of hi.rooms) {
-        if (text.includes(room.name.toLowerCase())) {
-           matchedRoom = room;
-           break;
+     if (highestOn > 0.65 && highestOn > highestOff) return true;
+     if (highestOff > 0.65 && highestOff > highestOn) return false;
+
+     return null;
+  };
+
+  const findBestMatch = (target, candidates, threshold = 0.45) => {
+     if (!candidates || candidates.length === 0) return null;
+     
+     // 1. Exact substring match (highest priority)
+     for (const candidate of candidates) {
+        if (target.includes(candidate.name.toLowerCase())) {
+           return candidate;
         }
      }
+     
+     const targetTokens = target.split(' ');
+     const candidateNames = candidates.map(c => c.name.toLowerCase());
+     
+     // 2. Full phrase fuzzy match
+     const fullMatch = stringSimilarity.findBestMatch(target, candidateNames);
+     if (fullMatch.bestMatch.rating > 0.65) {
+        return candidates[fullMatch.bestMatchIndex];
+     }
+
+     // 3. Token-level and Bigram-level fuzzy match (handles short names in long sentences)
+     let bestTokenMatch = null;
+     let highestRating = 0;
+
+     for (const candidate of candidates) {
+         const cName = candidate.name.toLowerCase();
+         // Single token
+         for (const token of targetTokens) {
+             const rating = stringSimilarity.compareTwoStrings(token, cName);
+             if (rating > highestRating) {
+                 highestRating = rating;
+                 bestTokenMatch = candidate;
+             }
+         }
+         // Bigram (two consecutive tokens)
+         for (let i = 0; i < targetTokens.length - 1; i++) {
+             const combined = `${targetTokens[i]} ${targetTokens[i+1]}`;
+             const rating = stringSimilarity.compareTwoStrings(combined, cName);
+             if (rating > highestRating) {
+                 highestRating = rating;
+                 bestTokenMatch = candidate;
+             }
+         }
+     }
+
+     if (highestRating >= threshold) {
+         return bestTokenMatch;
+     }
+
+     return null;
+  };
+
+  const processOfflineAI = (text, hi, td) => {
+     if(!hi || !hi.rooms) {
+       setFeedbackText('Home configuration not loaded.');
+       setTimeout(() => setFeedbackText(''), 3000);
+       return;
+     }
+
+     const normalizedText = normalize(text);
+
+     const action = getIntent(normalizedText);
+     
+     if (action === null) {
+       setFeedbackText(`Could not detect "on" or "off" in: "${text}"`);
+       setTimeout(() => setFeedbackText(''), 4000);
+       return;
+     }
+
+     const matchedRoom = findBestMatch(normalizedText, hi.rooms, 0.45);
 
      if (!matchedRoom) {
-       setFeedbackText('Room not found in command.');
-       setTimeout(() => setFeedbackText(''), 3000);
+       setFeedbackText(`Which room? (Command: "${text}")`);
+       setTimeout(() => setFeedbackText(''), 4000);
        return;
      }
 
-     let matchedDevice = null;
-     for (const dev of matchedRoom.devices) {
-        if (text.includes(dev.name.toLowerCase())) {
-           matchedDevice = dev;
-           break;
-        }
-     }
+     const matchedDevice = findBestMatch(normalizedText, matchedRoom.devices, 0.45);
 
      if (!matchedDevice) {
        setFeedbackText(`Device not found in ${matchedRoom.name}.`);
-       setTimeout(() => setFeedbackText(''), 3000);
+       setTimeout(() => setFeedbackText(''), 4000);
        return;
      }
 
@@ -101,7 +198,7 @@ const VoiceAssistant = ({ homeInfo, toggleDevice }) => {
      const recognition = new SpeechRecognition();
      recognition.continuous = false; // Only listen for a single command, no background listening
      recognition.interimResults = true; // Stream words in real-time!
-     recognition.lang = 'en-US';
+     recognition.lang = 'en-IN';
 
      recognition.onresult = (event) => {
        let interimStr = '';
@@ -125,7 +222,7 @@ const VoiceAssistant = ({ homeInfo, toggleDevice }) => {
          setFeedbackText(transcript);
          
          const { homeInfo: hi, toggleDevice: td } = stateRef.current;
-         processCommand(transcript, hi, td);
+         processOfflineAI(transcript, hi, td);
          setIsActive(false);
        }
      };
