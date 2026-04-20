@@ -14,6 +14,7 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [expandedMemberDetails, setExpandedMemberDetails] = useState(null);
   const [tempAccessibleRooms, setTempAccessibleRooms] = useState([]);
+  const [roomTemp, setRoomTemp] = useState(null);
 
   const handleSaveMemberRooms = async (memberId) => {
     try {
@@ -64,14 +65,22 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
       setPendingRequestsCount(prev => prev + 1);
     };
 
+    const handleTemperatureUpdate = (data) => {
+      if (data && data.temperature != null) {
+        setRoomTemp(data.temperature);
+      }
+    };
+
     socket.on('receiveChatMessage', handleChat);
     socket.on('chatCleared', handleChatCleared);
     socket.on('newJoinRequest', handleNewRequest);
+    socket.on('temperatureUpdate', handleTemperatureUpdate);
 
     return () => {
       socket.off('receiveChatMessage', handleChat);
       socket.off('chatCleared', handleChatCleared);
       socket.off('newJoinRequest', handleNewRequest);
+      socket.off('temperatureUpdate', handleTemperatureUpdate);
     };
   }, [socket, activeTab, user]);
 
@@ -386,6 +395,14 @@ const OwnerDashboard = ({ homeInfo, NotificationsUI, toggleDevice, handleLogout,
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
             
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px', fontWeight: 600, whiteSpace: 'nowrap' }}>Room Temp</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', whiteSpace: 'nowrap' }}>
+                <h2 style={{ color: 'var(--accent-yellow)', margin: 0, fontSize: '2.4rem', fontWeight: '800', lineHeight: '1', textShadow: '0 0 20px rgba(234, 235, 114, 0.4)' }}>{roomTemp !== null ? roomTemp.toFixed(1) : '--'}</h2>
+                <span style={{ color: 'var(--accent-yellow)', fontSize: '1rem', fontWeight: 'bold', opacity: 0.8 }}>°C</span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px', fontWeight: 600, whiteSpace: 'nowrap' }}>Live Power Draw</span>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', whiteSpace: 'nowrap' }}>

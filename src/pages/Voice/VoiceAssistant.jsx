@@ -102,9 +102,27 @@ const VoiceAssistant = ({ homeInfo, toggleDevice }) => {
      // 3. Token-level and Bigram-level fuzzy match (handles short names in long sentences)
      let bestTokenMatch = null;
      let highestRating = 0;
+     const stopWords = ['the', 'in', 'on', 'off', 'of', 'and', 'room', 'turn', 'switch', 'start', 'stop', 'please'];
 
      for (const candidate of candidates) {
          const cName = candidate.name.toLowerCase();
+         const cTokens = cName.split(' ');
+
+         // Partial exact word match (e.g. "fan" inside "ceiling fan")
+         let matchedWords = 0;
+         for (const token of targetTokens) {
+             if (token.length > 2 && !stopWords.includes(token) && cTokens.includes(token)) {
+                 matchedWords++;
+             }
+         }
+         if (matchedWords > 0) {
+             const rating = 0.7 + (matchedWords * 0.1);
+             if (rating > highestRating) {
+                 highestRating = rating;
+                 bestTokenMatch = candidate;
+             }
+         }
+
          // Single token
          for (const token of targetTokens) {
              const rating = stringSimilarity.compareTwoStrings(token, cName);
